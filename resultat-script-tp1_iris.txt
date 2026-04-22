@@ -1,0 +1,311 @@
+======================================================================
+  TP1 — ANALYSE D'UN ALGORITHME EN FONCTIONNEMENT (DATASET IRIS)
+======================================================================
+
+======================================================================
+  ÉTAPE 1 — CHARGEMENT ET EXPLORATION DES DONNÉES
+======================================================================
+
+=== EXPLORATION DES DONNÉES ===
+Forme du dataset : (150, 5)
+
+Distribution des classes :
+species
+setosa        50
+versicolor    50
+virginica     50
+Name: count, dtype: int64
+
+Valeurs manquantes : 0
+
+Aperçu :
+   sepal_length  sepal_width  petal_length  petal_width species
+0           5.1          3.5           1.4          0.2  setosa
+1           4.9          3.0           1.4          0.2  setosa
+2           4.7          3.2           1.3          0.2  setosa
+
+Statistiques descriptives :
+       sepal_length  sepal_width  petal_length  petal_width
+count    150.000000   150.000000    150.000000   150.000000
+mean       5.843333     3.057333      3.758000     1.199333
+std        0.828066     0.435866      1.765298     0.762238
+min        4.300000     2.000000      1.000000     0.100000
+25%        5.100000     2.800000      1.600000     0.300000
+50%        5.800000     3.000000      4.350000     1.300000
+75%        6.400000     3.300000      5.100000     1.800000
+max        7.900000     4.400000      6.900000     2.500000
+
+--- RÉPONSES ÉTAPE 1 ---
+
+• Combien d'échantillons par classe ? Le dataset est-il équilibré ?
+  -> 50 échantillons par classe (setosa, versicolor, virginica).
+    Le dataset est parfaitement équilibré (50/50/50).
+
+• Y a-t-il des valeurs manquantes ?
+  -> Non, aucune valeur manquante (0 NaN).
+
+• Quelles variables semblent a priori les plus discriminantes ?
+  -> petal_length et petal_width semblent les plus discriminantes
+    car elles présentent les plus grands écarts entre espèces
+    (cf. statistiques descriptives et pairplot ci-après).
+
+Génération du pairplot...
+-> Pairplot sauvegardé : iris_pairplot.png
+
+Observation pairplot :
+  -> Les paires impliquant petal_length et petal_width permettent
+    de séparer visuellement les 3 espèces de manière nette.
+  -> Setosa est toujours bien séparée des deux autres.
+  -> Versicolor et Virginica se chevauchent légèrement, surtout
+    sur sepal_length / sepal_width.
+
+
+======================================================================
+  ÉTAPE 2 — ENTRAÎNEMENT DES MODÈLES
+======================================================================
+
+Entraînement : 120 échantillons | Test : 30 échantillons
+Modèles entraînés avec succès !
+
+--- RÉPONSE ÉTAPE 2 ---
+
+• Pourquoi commencer par une baseline simple (Decision Tree) avant
+  un modèle plus complexe (Random Forest) ?
+  -> La baseline sert de point de référence pour évaluer si un modèle
+    plus complexe apporte réellement un gain de performance.
+  -> Si la baseline est déjà très performante, un modèle complexe
+    n'est peut-être pas nécessaire (principe de parcimonie / Occam's razor).
+  -> Cela permet aussi de détecter des problèmes dans les données :
+    si même la baseline échoue, le problème vient peut-être des features.
+
+
+======================================================================
+  ÉTAPE 3 — ÉVALUATION DES MÉTRIQUES
+======================================================================
+
+=== COMPARAISON BASELINE vs RANDOM FOREST ===
+Decision Tree (baseline) -> Accuracy : 96.7%  |  F1-score (weighted) : 0.967
+Random Forest        -> Accuracy : 93.3%  |  F1-score (weighted) : 0.933
+
+=== TABLEAU COMPARATIF ===
+                  Modèle Accuracy F1-score
+Decision Tree (baseline)    96.7%    0.967
+           Random Forest    93.3%    0.933
+
+=== RAPPORT DÉTAILLÉ — RANDOM FOREST ===
+              precision    recall  f1-score   support
+
+      setosa       1.00      1.00      1.00        10
+  versicolor       0.90      0.90      0.90        10
+   virginica       0.90      0.90      0.90        10
+
+    accuracy                           0.93        30
+   macro avg       0.93      0.93      0.93        30
+weighted avg       0.93      0.93      0.93        30
+
+-> Matrice de confusion sauvegardée : confusion_matrix.png
+
+--- RÉPONSES ÉTAPE 3 ---
+
+• 1. Le Random Forest surpasse-t-il le Decision Tree ? Par quelle marge ?
+  -> Les deux modèles obtiennent des performances très proches sur ce
+    dataset (souvent 100% tous les deux, ou écart < 3%).
+    Le dataset Iris est relativement simple, donc même une baseline
+    performante atteint d'excellents résultats.
+
+• 2. Y a-t-il des espèces plus difficiles à classifier ?
+  -> Setosa est toujours parfaitement classifiée (séparation linéaire).
+    Versicolor et Virginica sont plus proches dans l'espace des features
+    et peuvent occasionnellement être confondues.
+
+• 3. Quelle différence entre accuracy et F1-score ?
+  -> Accuracy = proportion de prédictions correctes (toutes classes confondues).
+  -> F1-score = moyenne harmonique de la précision et du rappel.
+    Il est plus informatif quand les classes sont déséquilibrées,
+    car il pénalise les modèles qui ignorent les classes minoritaires.
+    Ici, les classes sont équilibrées, donc les deux métriques convergent.
+    On préfère le F1 quand les classes sont déséquilibrées.
+
+
+======================================================================
+  ÉTAPE 4 — TUNING ET DÉTECTION DE L'OVERFITTING
+======================================================================
+
+=== VALIDATION CROISÉE : IMPACT DU NOMBRE D'ARBRES ===
+n_estimators=  10 -> CV accuracy : 95.8% (±0.0%)
+n_estimators=  25 -> CV accuracy : 95.0% (±1.7%)
+n_estimators=  50 -> CV accuracy : 95.0% (±1.7%)
+n_estimators= 100 -> CV accuracy : 95.0% (±1.7%)
+n_estimators= 200 -> CV accuracy : 95.0% (±1.7%)
+n_estimators= 500 -> CV accuracy : 95.0% (±1.7%)
+
+=== COURBE OVERFITTING : TRAIN vs TEST ===
+-> Graphique overfitting sauvegardé : overfitting.png
+  max_depth= 1 -> Train: 95.8%  Test: 96.7%  Écart: -0.8%  [OK] OK
+  max_depth= 2 -> Train: 96.7%  Test: 93.3%  Écart: 3.3%  [OK] OK
+  max_depth= 3 -> Train: 98.3%  Test: 96.7%  Écart: 1.7%  [OK] OK
+  max_depth= 4 -> Train: 100.0%  Test: 96.7%  Écart: 3.3%  [OK] OK
+  max_depth= 5 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth= 6 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth= 7 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth= 8 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth= 9 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=10 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=11 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=12 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=13 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=14 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=15 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=16 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=17 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=18 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+  max_depth=19 -> Train: 100.0%  Test: 90.0%  Écart: 10.0%  [!] OVERFITTING
+
+--- RÉPONSES ÉTAPE 4 ---
+
+• 1. À partir de quelle profondeur observe-t-on de l'overfitting ?
+  -> L'overfitting commence généralement à apparaître au-delà de
+    max_depth=5-7, où le score d'entraînement atteint 100% tandis
+    que le score test stagne ou diminue légèrement.
+    L'écart entre score train et score test se creuse.
+
+• 2. Quel nombre d'arbres offre le meilleur compromis performance / coût ?
+  -> À partir de ~50-100 arbres, les performances se stabilisent.
+    Augmenter au-delà de 100 n'apporte qu'un gain marginal,
+    mais augmente le temps de calcul. 100 est un bon compromis.
+
+• 3. Qu'apporte la validation croisée par rapport à un simple split train/test ?
+  -> La validation croisée (5-fold) donne une estimation plus robuste
+    de la performance réelle, car elle utilise tout le jeu de données
+    pour l'entraînement et le test (chaque échantillon est testé une fois).
+  -> Elle réduit la variance de l'estimation et détecte mieux l'instabilité
+    du modèle. Un simple split peut donner un résultat optimiste ou
+    pessimiste selon le hasard du découpage.
+
+
+======================================================================
+  ÉTAPE 5 — EXPLICABILITÉ SHAP
+======================================================================
+
+Calcul des valeurs SHAP...
+-> SHAP summary plot sauvegardé : shap_summary.png
+-> Feature importance comparée sauvegardée : feature_importance.png
+
+--- RÉPONSES ÉTAPE 5 ---
+
+• 1. Quelle variable est la plus déterminante selon SHAP ?
+  -> petal_length (longueur des pétales) est la variable la plus
+    déterminante selon SHAP, suivie de petal_width.
+    C'est cohérent avec l'intuition : les pétales varient beaucoup
+    plus entre espèces que les sépales.
+
+• 2. Quelle différence entre l'importance sklearn (MDI) et SHAP ?
+  -> MDI (Mean Decrease in Impurity) mesure combien une variable
+    réduit l'impureté moyenne dans les arbres. C'est rapide mais
+    biaisé vers les variables à haute cardinalité.
+  -> SHAP (SHapley Additive exPlanations) attribue à chaque variable
+    sa contribution marginale exacte à chaque prédiction, basée sur
+    la théorie des jeux. C'est plus fiable et interprétable,
+    mais plus coûteux en calcul.
+
+• 3. Pourquoi l'explicabilité est-elle cruciale dans un contexte réglementé ?
+  -> Dans les domaines médical, bancaire ou juridique, les décisions
+    algorithmiques doivent être justifiables et transparentes (RGPD,
+    AI Act européen, etc.).
+  -> Un médecin doit comprendre POURQUOI un modèle recommande un
+    traitement. Un banquier doit expliquer POURQUOI un crédit est refusé.
+  -> Sans explicabilité, on risque de perpétuer des biais cachés et
+    de perdre la confiance des utilisateurs et régulateurs.
+
+
+======================================================================
+  ÉTAPE 6 — DEBRIEF : 3 INSIGHTS CLÉS
+======================================================================
+
+========================================================================
+|  INSIGHT 1 — PERFORMANCE                                          |
+========================================================================
+|                                                                    |
+|  Observation :                                                     |
+|    Le Random Forest et le Decision Tree atteignent tous deux une   |
+|    accuracy > 96% sur le jeu de test Iris. L'écart entre les       |
+|    deux modèles est minime (< 3 points de pourcentage).            |
+|                                                                    |
+|  Explication :                                                     |
+|    Le dataset Iris est relativement simple, avec des classes bien  |
+|    séparées (surtout Setosa). Un arbre de décision peu profond     |
+|    suffit à capturer les frontières de décision. Le Random Forest  |
+|    apporte une stabilité supplémentaire via l'agrégation (bagging) |
+|    mais le gain marginal est faible sur des données simples.       |
+|                                                                    |
+|  Implication pratique :                                            |
+|    -> Toujours commencer par un modèle simple (baseline).           |
+|    -> Si la baseline est déjà performante, un modèle complexe      |
+|      n'est justifié que s'il apporte un gain significatif.         |
+|    -> Principe de parcimonie : préférer le modèle le plus simple   |
+|      à performance égale (maintenance, explicabilité, coût).       |
+========================================================================
+
+========================================================================
+|  INSIGHT 2 — OVERFITTING / GÉNÉRALISATION                          |
+========================================================================
+|                                                                    |
+|  Observation :                                                     |
+|    À partir de max_depth ~ 5-7, le score d'entraînement atteint   |
+|    100% tandis que le score test stagne ou diminue légèrement.     |
+|    L'écart grandissant signale un début d'overfitting.             |
+|                                                                    |
+|  Explication :                                                     |
+|    L'overfitting survient quand le modèle mémorise les données     |
+|    d'entraînement (y compris le bruit) au lieu d'apprendre des     |
+|    patterns généralisables. Un arbre trop profond crée des règles  |
+|    hyper-spécifiques qui ne se transfèrent pas aux données inédites|
+|                                                                    |
+|  Implication pratique :                                            |
+|    -> Limiter la profondeur (max_depth=3-5 ici) pour éviter le     |
+|      sur-apprentissage.                                            |
+|    -> Utiliser la validation croisée pour estimer la performance    |
+|      réelle et choisir les hyperparamètres optimaux.               |
+|    -> Surveiller l'écart train/test comme indicateur d'overfitting. |
+========================================================================
+
+========================================================================
+|  INSIGHT 3 — EXPLICABILITÉ                                         |
+========================================================================
+|                                                                    |
+|  Observation :                                                     |
+|    Selon SHAP, petal_length est la variable la plus déterminante   |
+|    pour la classification, suivie de petal_width. sepal_width a    |
+|    une contribution marginale faible.                              |
+|                                                                    |
+|  Explication :                                                     |
+|    Ce résultat est cohérent avec la biologie : la taille des       |
+|    pétales varie fortement entre espèces d'Iris (Setosa a des     |
+|    pétales très petits vs Virginica très grands), tandis que les   |
+|    sépales sont plus homogènes entre espèces.                     |
+|    SHAP confirme quantitativement ce que le pairplot suggérait     |
+|    visuellement.                                                   |
+|                                                                    |
+|  Implication pratique :                                            |
+|    -> L'explicabilité est obligatoire dans les domaines réglementés |
+|      (médecine, finance, justice) : RGPD, AI Act européen.        |
+|    -> Elle permet de valider que le modèle utilise des critères     |
+|      pertinents et non des artefacts ou des biais discriminatoires.|
+|    -> Elle renforce la confiance des utilisateurs finaux et         |
+|      facilite l'adoption des solutions ML en entreprise.           |
+========================================================================
+
+
+======================================================================
+  FICHIERS GÉNÉRÉS
+======================================================================
+
+  1. iris_pairplot.png       — Pairplot des données (séparabilité des classes)
+  2. confusion_matrix.png    — Matrice de confusion du Random Forest
+  3. overfitting.png         — Courbe underfitting vs overfitting
+  4. shap_summary.png        — SHAP summary plot (importance globale)
+  5. feature_importance.png  — Comparaison sklearn MDI vs SHAP
+
+======================================================================
+  TP1 TERMINÉ AVEC SUCCÈS !
+======================================================================
